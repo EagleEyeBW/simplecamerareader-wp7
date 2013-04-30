@@ -11,8 +11,8 @@ using System.Windows.Threading;
 using Microsoft.Devices;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using zxingwp7;
-using zxingwp7.common;
+using ZXing;
+using ZXing.Common;
 
 namespace zxingwp7.SimpleCameraReader
 {
@@ -34,6 +34,7 @@ namespace zxingwp7.SimpleCameraReader
         private DispatcherTimer _timer;
         private PhotoCameraLuminanceSource _luminance;
         private MultiFormatReader _reader;
+        private IBarcodeReader reader;
         private PhotoCamera _photoCamera;
 
         private TimeSpan _scanInterval;
@@ -156,7 +157,7 @@ namespace zxingwp7.SimpleCameraReader
             _reader = new MultiFormatReader();
 
             // At first initialization we use all formats
-            if (formats == null) formats = BarcodeFormat.AllFormats;
+//            if (formats == null) formats = BarcodeFormat.AllFormats;
 
             var hints = new Dictionary<DecodeHintType, Object> { { DecodeHintType.POSSIBLE_FORMATS, formats } };
 
@@ -259,13 +260,13 @@ namespace zxingwp7.SimpleCameraReader
 
             try
             {
-                 _photoCamera.GetPreviewBufferY(_luminance.PreviewBufferY);
+                _photoCamera.GetPreviewBufferY(_luminance.PreviewBufferY);
                 var binarizer = new HybridBinarizer(_luminance);
                 var binBitmap = new BinaryBitmap(binarizer);
 
                 var result = _reader.decode(binBitmap);
-
-                OnDecodingCompleted(result);
+                if (result != null)
+                    OnDecodingCompleted(result);
             }
             catch (Exception)
             {
@@ -292,6 +293,34 @@ namespace zxingwp7.SimpleCameraReader
         {
             if (CameraInitialized != null)
                 CameraInitialized(this, initialized);
+        }
+    }
+
+    public class PhotoCameraLuminanceSource : BaseLuminanceSource
+    {
+        public byte[] PreviewBufferY
+        {
+            get
+            {
+                return luminances;
+            }
+        }
+
+        public PhotoCameraLuminanceSource(int width, int height)
+            : base(width, height)
+        {
+            luminances = new byte[width * height];
+        }
+
+        internal PhotoCameraLuminanceSource(int width, int height, byte[] newLuminances)
+            : base(width, height)
+        {
+            luminances = newLuminances;
+        }
+
+        protected override LuminanceSource CreateLuminanceSource(byte[] newLuminances, int width, int height)
+        {
+            return new PhotoCameraLuminanceSource(width, height, newLuminances);
         }
     }
 }

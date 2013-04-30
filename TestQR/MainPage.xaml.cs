@@ -47,6 +47,7 @@ namespace TestQR
         {
             // Initialize a new instance of SimpleCameraReader with Auto-Focus mode on
             _reader = new SimpleCameraReader(true);
+            ;
 
             // We need to set the VideoBrush we're going to display the preview feed on
             // IMPORTANT that it gets set before Camera initializes
@@ -72,7 +73,7 @@ namespace TestQR
             });
 
             // We can set if Camera should flash or not when focused
-            _reader.FlashMode = FlashMode.On;
+            _reader.FlashMode = FlashMode.Off;
 
             // Starts the capturing process
             _reader.Start();
